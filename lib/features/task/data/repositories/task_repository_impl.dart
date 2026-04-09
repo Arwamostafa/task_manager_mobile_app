@@ -15,6 +15,12 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
+  Future<TaskEntity> getTaskById(String taskId) async {
+    final model = await remoteDataSource.getTaskById(taskId);
+    return model.toEntity();
+  }
+
+  @override
   Future<TaskEntity> createTask(TaskEntity task) async {
     final model = await remoteDataSource.createTask(TaskModel.fromEntity(task));
     return model.toEntity();

@@ -25,6 +25,20 @@ class TaskRemoteDataSource {
     }
   }
 
+  Future<TaskModel> getTaskById(String taskId) async {
+    try {
+      final response = await dio.get(
+        '${AppConstants.baseUrl}${AppConstants.tasksEndpoint}/$taskId',
+      );
+      return TaskModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'] as String?;
+      throw ServerException(message: message ?? 'Failed to fetch task details.');
+    } catch (_) {
+      throw const ServerException(message: 'Something went wrong.');
+    }
+  }
+
   Future<TaskModel> createTask(TaskModel task) async {
     try {
       final response = await dio.post(

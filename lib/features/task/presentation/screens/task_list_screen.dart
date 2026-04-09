@@ -19,8 +19,10 @@ class TaskListScreen extends StatefulWidget {
 
 class _TaskListScreenState extends State<TaskListScreen> {
   final _searchController = TextEditingController();
-  String _selectedFilter = 'All';
-  final _filters = ['All', 'Todo', 'In Progress', 'Done'];
+  String _selectedStatusFilter = 'All';
+  String _selectedPriorityFilter = 'All';
+  final _statusFilters = ['All', 'Todo', 'In Progress', 'Done'];
+  final _priorityFilters = ['All', 'High', 'Medium', 'Low'];
 
   @override
   void dispose() {
@@ -34,12 +36,19 @@ class _TaskListScreenState extends State<TaskListScreen> {
       final matchesSearch = query.isEmpty ||
           task.title.toLowerCase().contains(query) ||
           (task.description?.toLowerCase().contains(query) ?? false);
-      final matchesFilter = _selectedFilter == 'All' ||
-          (_selectedFilter == 'Todo' && task.status == TaskStatus.todo) ||
-          (_selectedFilter == 'In Progress' &&
+      final matchesStatus = _selectedStatusFilter == 'All' ||
+          (_selectedStatusFilter == 'Todo' && task.status == TaskStatus.todo) ||
+          (_selectedStatusFilter == 'In Progress' &&
               task.status == TaskStatus.inProgress) ||
-          (_selectedFilter == 'Done' && task.status == TaskStatus.done);
-      return matchesSearch && matchesFilter;
+          (_selectedStatusFilter == 'Done' && task.status == TaskStatus.done);
+      final matchesPriority = _selectedPriorityFilter == 'All' ||
+          (_selectedPriorityFilter == 'High' &&
+              task.priority == TaskPriority.high) ||
+          (_selectedPriorityFilter == 'Medium' &&
+              task.priority == TaskPriority.medium) ||
+          (_selectedPriorityFilter == 'Low' &&
+              task.priority == TaskPriority.low);
+      return matchesSearch && matchesStatus && matchesPriority;
     }).toList();
   }
 
@@ -56,7 +65,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 _buildHeader(context),
                 _buildSearchBar(),
                 _buildFilterChips(),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Expanded(child: _buildBody(context, state)),
               ],
             );
@@ -89,8 +98,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
             ),
           ),
           GestureDetector(
-            onTap: () =>
-                context.read<AuthBloc>().add(const AuthEvent.loggedOut()),
+            onTap: () => _confirmLogout(context),
             child: Container(
               width: 38,
               height: 38,
@@ -145,33 +153,60 @@ class _TaskListScreenState extends State<TaskListScreen> {
   // ── Filter chips ───────────────────────────────────────────────────────────
 
   Widget _buildFilterChips() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildChipRow(
+          label: 'Status',
+          filters: _statusFilters,
+          selected: _selectedStatusFilter,
+          onTap: (f) => setState(() => _selectedStatusFilter = f),
+        ),
+        const SizedBox(height: 8),
+        _buildChipRow(
+          label: 'Priority',
+          filters: _priorityFilters,
+          selected: _selectedPriorityFilter,
+          onTap: (f) => setState(() => _selectedPriorityFilter = f),
+          color: const Color(0xFFFFB74D),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChipRow({
+    required String label,
+    required List<String> filters,
+    required String selected,
+    required ValueChanged<String> onTap,
+    Color color = kPurple,
+  }) {
     return SizedBox(
       height: 36,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _filters.length,
+        itemCount: filters.length,
         itemBuilder: (context, index) {
-          final filter = _filters[index];
-          final isSelected = _selectedFilter == filter;
+          final filter = filters[index];
+          final isSelected = selected == filter;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
-              onTap: () => setState(() => _selectedFilter = filter),
+              onTap: () => onTap(filter),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isSelected ? kPurple : kCardBg,
+                  color: isSelected ? color : kCardBg,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   filter,
                   style: TextStyle(
                     color: isSelected ? Colors.white : Colors.white54,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
                     fontSize: 13,
                   ),
                 ),
@@ -240,6 +275,89 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
   // ── Navigation helpers ─────────────────────────────────────────────────────
 
+  void _confirmLogout(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1040),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1A1A3D),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: kPurple,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Log out?',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Are you sure you want to log out?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white60,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.read<AuthBloc>().add(const AuthEvent.loggedOut());
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'Yes, log out',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.white54, fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _openCreate(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -256,10 +374,14 @@ class _TaskListScreenState extends State<TaskListScreen> {
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
           value: context.read<TaskBloc>(),
-          child: TaskDetailScreen(task: task),
+          child: TaskDetailScreen(taskId: task.id),
         ),
       ),
-    );
+    ).then((_) {
+      if (!context.mounted) return;
+      // Reload list when returning from detail page as it might have mutated the backend directly
+      context.read<TaskBloc>().add(const LoadTasksEvent());
+    });
   }
 }
 

@@ -6,7 +6,7 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      token: json['token'] as String,
+      token: (json['accessToken'] ?? json['token'] ?? '') as String,
     );
   }
 

@@ -7,6 +7,7 @@ import 'package:task_manager/features/Auth/presentation/widgets/custom_text_fiel
 import 'package:task_manager/features/Auth/presentation/widgets/primary_button.dart';
 import 'package:task_manager/features/Auth/presentation/bloc/auth_bloc.dart';
 import 'package:task_manager/features/Auth/presentation/bloc/auth_event.dart';
+import 'package:task_manager/features/Auth/presentation/screens/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -158,6 +159,25 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                           }
                         },
+                      ),
+                      const SizedBox(height: 28),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Don't have an account?",
+                            style: TextStyle(color: Colors.white54),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                              );
+                            },
+                            child: const Text('Sign Up', style: TextStyle(color: Color(0xFF7C4DFF), fontWeight: FontWeight.bold)),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 28),
                     ],
