@@ -135,4 +135,4 @@ After a successful login or registration, the token returned by the server is pe
 | `get_it`                 | Dependency injection           |
 | `dio`                    | HTTP client                    |
 | `flutter_secure_storage` | Secure token storage           |
-| `freezed`                | Immutable models & union types |
+
