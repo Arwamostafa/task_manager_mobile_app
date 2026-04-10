@@ -1,9 +1,15 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-part 'auth_state.freezed.dart';
+abstract class AuthState {
+  const AuthState();
+}
 
-@freezed
-class AuthState with _$AuthState {
-  const factory AuthState.initial() = _Initial;
-  const factory AuthState.authenticated() = _Authenticated;
-  const factory AuthState.unauthenticated() = _Unauthenticated;
+class AuthInitial extends AuthState {
+  const AuthInitial();
+}
+
+class AuthAuthenticated extends AuthState {
+  const AuthAuthenticated();
+}
+
+class AuthUnauthenticated extends AuthState {
+  const AuthUnauthenticated();
 }

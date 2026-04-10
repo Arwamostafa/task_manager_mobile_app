@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(
-          create: (_) => di.sl<AuthBloc>()..add(const AuthEvent.appStarted()),
+          create: (_) => di.sl<AuthBloc>()..add(const AppStarted()),
         ),
         BlocProvider<LoginBloc>(
           create: (_) => di.sl<LoginBloc>(),
@@ -38,16 +38,15 @@ class MyApp extends StatelessWidget {
         theme: appTheme,
         home: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
-            return state.when(
-              initial: () => const SplashScreen(),
-              unauthenticated: () => const LoginScreen(),
-              authenticated: () => BlocProvider<TaskBloc>(
-                // Create a fresh TaskBloc and immediately load tasks from the API.
+            if (state is AuthInitial) return const SplashScreen();
+            if (state is AuthAuthenticated) {
+              return BlocProvider<TaskBloc>(
                 create: (_) =>
                     di.sl<TaskBloc>()..add(const LoadTasksEvent()),
                 child: const TaskListScreen(),
-              ),
-            );
+              );
+            }
+            return const LoginScreen();
           },
         ),
       ),

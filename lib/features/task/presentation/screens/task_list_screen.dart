@@ -327,7 +327,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.read<AuthBloc>().add(const AuthEvent.loggedOut());
+                    context.read<AuthBloc>().add(const LoggedOut());
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kPurple,

@@ -1,10 +1,5 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class User {
+  final String token;
 
-part 'user.freezed.dart';
-
-@freezed
-class User with _$User {
-  const factory User({
-    required String token,
-  }) = _User;
+  const User({required this.token});
 }

@@ -7,21 +7,19 @@ import 'login_state.dart';
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final LoginUseCase loginUseCase;
 
-  LoginBloc({required this.loginUseCase}) : super(const LoginState.initial()) {
+  LoginBloc({required this.loginUseCase}) : super(const LoginInitial()) {
     on<LoginEvent>((event, emit) async {
-      await event.map(
-        loginSubmitted: (e) async {
-          emit(const LoginState.loading());
-          try {
-            await loginUseCase(e.email, e.password);
-            emit(const LoginState.success());
-          } on ServerException catch (ex) {
-            emit(LoginState.failure(ex.message));
-          } catch (_) {
-            emit(const LoginState.failure('Something went wrong. Please try again.'));
-          }
-        },
-      );
+      if (event is LoginSubmitted) {
+        emit(const LoginLoading());
+        try {
+          await loginUseCase(event.email, event.password);
+          emit(const LoginSuccess());
+        } on ServerException catch (ex) {
+          emit(LoginFailure(ex.message));
+        } catch (_) {
+          emit(const LoginFailure('Something went wrong. Please try again.'));
+        }
+      }
     });
   }
 }

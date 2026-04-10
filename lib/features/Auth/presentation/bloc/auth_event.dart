@@ -1,9 +1,15 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-part 'auth_event.freezed.dart';
+abstract class AuthEvent {
+  const AuthEvent();
+}
 
-@freezed
-class AuthEvent with _$AuthEvent {
-  const factory AuthEvent.appStarted() = _AppStarted;
-  const factory AuthEvent.loggedIn() = _LoggedIn;
-  const factory AuthEvent.loggedOut() = _LoggedOut;
+class AppStarted extends AuthEvent {
+  const AppStarted();
+}
+
+class LoggedIn extends AuthEvent {
+  const LoggedIn();
+}
+
+class LoggedOut extends AuthEvent {
+  const LoggedOut();
 }

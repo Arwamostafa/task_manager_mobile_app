@@ -88,7 +88,7 @@ Future<void> init() async {
       onError: (error, handler) async {
         if (error.response?.statusCode == 401) {
           await sl<AuthLocalDataSource>().deleteToken();
-          sl<AuthBloc>().add(const AuthEvent.loggedOut());
+          sl<AuthBloc>().add(const LoggedOut());
         }
         handler.next(error);
       },

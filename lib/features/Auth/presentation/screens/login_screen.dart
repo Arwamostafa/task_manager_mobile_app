@@ -34,31 +34,23 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: BlocConsumer<LoginBloc, LoginState>(
         listener: (context, state) {
-          state.whenOrNull(
-            // On success: fire AuthBloc to switch to authenticated state.
-            // AuthBloc routing in main.dart will handle screen navigation.
-            success: () {
-              context.read<AuthBloc>().add(const AuthEvent.loggedIn());
-            },
-            failure: (message) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(message),
-                  backgroundColor: Colors.redAccent,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+          if (state is LoginSuccess) {
+            context.read<AuthBloc>().add(const LoggedIn());
+          } else if (state is LoginFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.redAccent,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              );
-            },
-          );
+              ),
+            );
+          }
         },
         builder: (context, state) {
-          final isLoading = state.maybeWhen(
-            loading: () => true,
-            orElse: () => false,
-          );
+          final isLoading = state is LoginLoading;
 
           return SafeArea(
             child: Center(
@@ -70,12 +62,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 40),
-                      // Logo icon — matches reference (two squares in a circle)
                       Container(
                         width: 80,
                         height: 80,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF7C4DFF),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF7C4DFF),
                           shape: BoxShape.circle,
                         ),
                         child: const Center(child: _LogoIcon()),
@@ -95,7 +86,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(fontSize: 15, color: Colors.white54),
                       ),
                       const SizedBox(height: 40),
-                      // Email field
                       CustomTextField(
                         controller: _emailController,
                         hintText: 'name@example.com',
@@ -114,7 +104,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      // Password field
                       CustomTextField(
                         controller: _passwordController,
                         hintText: 'Password',
@@ -145,14 +134,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       const SizedBox(height: 28),
-                      // Sign In button
                       PrimaryButton(
                         text: 'Sign In',
                         isLoading: isLoading,
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
                             context.read<LoginBloc>().add(
-                              LoginEvent.loginSubmitted(
+                              LoginSubmitted(
                                 _emailController.text.trim(),
                                 _passwordController.text,
                               ),
@@ -172,10 +160,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                                MaterialPageRoute(
+                                    builder: (_) => const RegisterScreen()),
                               );
                             },
-                            child: const Text('Sign Up', style: TextStyle(color: Color(0xFF7C4DFF), fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                  color: Color(0xFF7C4DFF),
+                                  fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ],
                       ),
@@ -192,7 +186,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-/// Two-square logo matching the reference image.
 class _LogoIcon extends StatelessWidget {
   const _LogoIcon();
 
