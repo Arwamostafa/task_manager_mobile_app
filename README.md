@@ -107,6 +107,26 @@ After a successful login or registration, the token returned by the server is pe
 
 ---
 
+## Screenshots
+
+| Login | Registration |
+|-------|-------------|
+| <img src="screenshots/Login.png" width="250"> | <img src="screenshots/Registration.png" width="250"> |
+
+| List of Tasks | Create Task |
+|---------------|-------------|
+| <img src="screenshots/List of tasks.png" width="250"> | <img src="screenshots/create task.png" width="250"> |
+
+| Task Details | Edit Task |
+|--------------|-----------|
+| <img src="screenshots/task details.png" width="250"> | <img src="screenshots/edit task.png" width="250"> |
+
+| Delete Task | After Delete |
+|-------------|--------------|
+| <img src="screenshots/delete task.png" width="250"> | <img src="screenshots/lsit task after delete .png" width="250"> |
+
+---
+
 ## Dependencies
 
 | Package                  | Purpose                        |
