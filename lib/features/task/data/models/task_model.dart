@@ -8,6 +8,7 @@ class TaskModel {
   final String priority;
   final String? dueDate;
   final int? assignedTo;
+  final int? userId; // Placeholder user ID for API compatibility
 
   const TaskModel({
     required this.id,
@@ -17,6 +18,7 @@ class TaskModel {
     required this.priority,
     this.dueDate,
     this.assignedTo,
+    this.userId, 
   });
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
@@ -28,6 +30,7 @@ class TaskModel {
       priority: json['priority'] as String,
       dueDate: json['dueDate'] as String?,
       assignedTo: json['assignedTo'] as int?,
+      userId: json['userId'] as int?, // Placeholder user ID for API compatibility
     );
   }
 
@@ -39,10 +42,11 @@ class TaskModel {
       'priority': priority,
       'dueDate': dueDate,
       'assignedTo': assignedTo,
+      'userId': userId, 
     };
   }
 
-  TaskEntity toEntity() {
+  TaskEntity toEntity({List<AppUser> users = const []}) {
     return TaskEntity(
       id: id.toString(),
       title: title,
@@ -50,8 +54,9 @@ class TaskModel {
       status: _parseStatus(status),
       priority: _parsePriority(priority),
       dueDate: dueDate != null ? DateTime.tryParse(dueDate!) : null,
-      assignedUser: assignedTo != null ? _findUser(assignedTo!) : null,
+      assignedUser: assignedTo != null ? _findUser(assignedTo!, users: users) : null,
       createdAt: DateTime.now(),
+      userId: userId,
     );
   }
 
@@ -77,8 +82,8 @@ class TaskModel {
     }
   }
 
-  static AppUser? _findUser(int userId) {
-    final found = mockUsers.where((u) => u.id == userId.toString());
+  static AppUser? _findUser(int userId , {List<AppUser> users = const []}) {
+    final found = users.where((u) => u.id == userId.toString());
     return found.isNotEmpty ? found.first : null;
   }
 

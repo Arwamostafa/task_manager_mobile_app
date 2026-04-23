@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:task_manager/features/Auth/presentation/bloc/login_bloc.dart';
-import 'package:task_manager/features/Auth/presentation/bloc/login_event.dart';
-import 'package:task_manager/features/Auth/presentation/bloc/login_state.dart';
+import 'package:task_manager/features/Auth/presentation/cubit/login_state.dart';
+import 'package:task_manager/features/Auth/presentation/cubit/login_cubit.dart';
 import 'package:task_manager/features/Auth/presentation/widgets/custom_text_field.dart';
+import 'package:task_manager/features/Auth/presentation/widgets/logo_Icon.dart';
 import 'package:task_manager/features/Auth/presentation/widgets/primary_button.dart';
-import 'package:task_manager/features/Auth/presentation/bloc/auth_bloc.dart';
-import 'package:task_manager/features/Auth/presentation/bloc/auth_event.dart';
+import 'package:task_manager/features/Auth/presentation/cubit/auth_cubit.dart';
+import 'package:task_manager/di/injection_container.dart' as di;
+import 'package:task_manager/features/Auth/presentation/cubit/register_cubit.dart';
 import 'package:task_manager/features/Auth/presentation/screens/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -32,10 +33,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocConsumer<LoginBloc, LoginState>(
+      body: BlocConsumer<LoginCubit, LoginState>(
         listener: (context, state) {
           if (state is LoginSuccess) {
-            context.read<AuthBloc>().add(const LoggedIn());
+            context.read<AuthCubit>().loggedIn();
           } else if (state is LoginFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -69,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: Color(0xFF7C4DFF),
                           shape: BoxShape.circle,
                         ),
-                        child: const Center(child: _LogoIcon()),
+                        child: const Center(child: LogoIcon()),
                       ),
                       const SizedBox(height: 32),
                       const Text(
@@ -139,11 +140,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         isLoading: isLoading,
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
-                            context.read<LoginBloc>().add(
-                              LoginSubmitted(
-                                _emailController.text.trim(),
-                                _passwordController.text,
-                              ),
+                            context.read<LoginCubit>().login(
+                              _emailController.text.trim(),
+                              _passwordController.text,
                             );
                           }
                         },
@@ -161,7 +160,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (_) => const RegisterScreen()),
+                                  builder: (_) => BlocProvider<RegisterCubit>(
+                                    create: (_) => di.sl<RegisterCubit>(),
+                                    child: const RegisterScreen(),
+                                  ),
+                                ),
                               );
                             },
                             child: const Text(
@@ -186,32 +189,3 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class _LogoIcon extends StatelessWidget {
-  const _LogoIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 16,
-          height: 20,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(width: 5),
-        Container(
-          width: 16,
-          height: 20,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-      ],
-    );
-  }
-}

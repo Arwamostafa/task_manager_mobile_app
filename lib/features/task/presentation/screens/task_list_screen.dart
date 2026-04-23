@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:task_manager/features/Auth/presentation/bloc/auth_bloc.dart';
-import 'package:task_manager/features/Auth/presentation/bloc/auth_event.dart';
+import 'package:task_manager/features/Auth/presentation/cubit/auth_cubit.dart';
 import 'package:task_manager/features/task/domain/entities/task_entity.dart';
-import 'package:task_manager/features/task/presentation/bloc/task_bloc.dart';
-import 'package:task_manager/features/task/presentation/bloc/task_event.dart';
-import 'package:task_manager/features/task/presentation/bloc/task_state.dart';
+import 'package:task_manager/features/task/presentation/cubit/task_cubit.dart';
 import 'package:task_manager/features/task/presentation/screens/create_edit_task_screen.dart';
 import 'package:task_manager/features/task/presentation/screens/task_detail_screen.dart';
 import 'package:task_manager/features/task/presentation/widgets/task_badges.dart';
+import 'package:task_manager/features/task/presentation/widgets/task_card.dart';
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
@@ -30,7 +28,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     super.dispose();
   }
 
-  List<TaskEntity> _applyFilters(List<TaskEntity> tasks) {
+List<TaskEntity> _applyFilters(List<TaskEntity> tasks) {
     final query = _searchController.text.toLowerCase();
     return tasks.where((task) {
       final matchesSearch = query.isEmpty ||
@@ -57,7 +55,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     return Scaffold(
       backgroundColor: kBgDark,
       body: SafeArea(
-        child: BlocBuilder<TaskBloc, TaskState>(
+        child: BlocBuilder<TaskCubit, TaskState>(
           builder: (context, state) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +240,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
             const SizedBox(height: 16),
             TextButton(
               onPressed: () =>
-                  context.read<TaskBloc>().add(const LoadTasksEvent()),
+                  context.read<TaskCubit>().loadTasks(),
               child: const Text('Retry', style: TextStyle(color: kPurple)),
             ),
           ],
@@ -266,7 +264,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
       itemCount: tasks.length,
-      itemBuilder: (context, index) => _TaskCard(
+      itemBuilder: (context, index) => TaskCard(
         task: tasks[index],
         onTap: () => _openDetail(context, tasks[index]),
       ),
@@ -327,7 +325,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.read<AuthBloc>().add(const LoggedOut());
+                    context.read<AuthCubit>().loggedOut();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kPurple,
@@ -362,7 +360,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
-          value: context.read<TaskBloc>(),
+          value: context.read<TaskCubit>(),
           child: const CreateEditTaskScreen(),
         ),
       ),
@@ -373,105 +371,16 @@ class _TaskListScreenState extends State<TaskListScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
-          value: context.read<TaskBloc>(),
+          value: context.read<TaskCubit>(),
           child: TaskDetailScreen(taskId: task.id),
         ),
       ),
     ).then((_) {
       if (!context.mounted) return;
-      // Reload list when returning from detail page as it might have mutated the backend directly
-      context.read<TaskBloc>().add(const LoadTasksEvent());
+      context.read<TaskCubit>().loadTasks();
     });
   }
 }
 
 // ── Task card ──────────────────────────────────────────────────────────────────
 
-class _TaskCard extends StatelessWidget {
-  final TaskEntity task;
-  final VoidCallback onTap;
-  const _TaskCard({required this.task, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: [
-            // Coloured left-border accent
-            Container(
-              width: 4,
-              height: 90,
-              decoration: BoxDecoration(
-                color: cardBorderColor(task.status),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(14),
-                  bottomLeft: Radius.circular(14),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      task.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      task.description ?? '',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white38,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        StatusBadge(status: task.status),
-                        const SizedBox(width: 8),
-                        PriorityBadge(priority: task.priority),
-                        const Spacer(),
-                        if (task.dueDate != null) ...[
-                          Text(
-                            formatDateShort(task.dueDate),
-                            style: const TextStyle(
-                              color: Colors.white38,
-                              fontSize: 11,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        if (task.assignedUser != null)
-                          AssigneeAvatar(
-                            initials: task.assignedUser!.initials[0],
-                            size: 26,
-                            fontSize: 11,
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

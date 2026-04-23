@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:task_manager/features/Auth/presentation/bloc/register_bloc.dart';
-import 'package:task_manager/features/Auth/presentation/bloc/register_event.dart';
-import 'package:task_manager/features/Auth/presentation/bloc/register_state.dart';
+import 'package:task_manager/features/Auth/presentation/cubit/register_state.dart';
+import 'package:task_manager/features/Auth/presentation/cubit/register_cubit.dart';
 import 'package:task_manager/features/Auth/presentation/widgets/custom_text_field.dart';
 import 'package:task_manager/features/Auth/presentation/widgets/primary_button.dart';
 import 'package:task_manager/di/injection_container.dart' as di;
@@ -32,7 +31,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => di.sl<RegisterBloc>(),
+      create: (_) => di.sl<RegisterCubit>(),
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -42,7 +41,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
-        body: BlocConsumer<RegisterBloc, RegisterState>(
+        body: BlocConsumer<RegisterCubit, RegisterState>(
           listener: (context, state) {
             if (state is RegisterSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -152,12 +151,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           isLoading: isLoading,
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              context.read<RegisterBloc>().add(
-                                RegisterSubmitted(
-                                  _emailController.text.trim(),
-                                  _passwordController.text,
-                                  _nameController.text.trim(),
-                                ),
+                              context.read<RegisterCubit>().register(
+                                _emailController.text.trim(),
+                                _passwordController.text,
+                                _nameController.text.trim(),
                               );
                             }
                           },

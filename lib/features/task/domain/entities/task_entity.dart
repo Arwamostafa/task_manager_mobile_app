@@ -1,3 +1,4 @@
+
 enum TaskStatus { todo, inProgress, done }
 
 enum TaskPriority { low, medium, high }
@@ -14,13 +15,6 @@ class AppUser {
   });
 }
 
-const List<AppUser> mockUsers = [
-  AppUser(id: '1', name: 'Sara H.', initials: 'SH'),
-  AppUser(id: '2', name: 'Ahmed M.', initials: 'AM'),
-  AppUser(id: '3', name: 'Karim K.', initials: 'KK'),
-  AppUser(id: '4', name: 'John D.', initials: 'JD'),
-];
-
 class TaskEntity {
   final String id;
   final String title;
@@ -30,6 +24,7 @@ class TaskEntity {
   final DateTime? dueDate;
   final AppUser? assignedUser;
   final DateTime createdAt;
+  final int? userId; 
 
   const TaskEntity({
     required this.id,
@@ -40,6 +35,7 @@ class TaskEntity {
     this.dueDate,
     this.assignedUser,
     required this.createdAt,
+    this.userId, 
   });
 
   TaskEntity copyWith({
@@ -53,6 +49,7 @@ class TaskEntity {
     bool clearDueDate = false,
     bool clearAssignedUser = false,
     DateTime? createdAt,
+    int? userId,
   }) {
     return TaskEntity(
       id: id ?? this.id,
@@ -61,9 +58,9 @@ class TaskEntity {
       status: status ?? this.status,
       priority: priority ?? this.priority,
       dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
-      assignedUser:
-          clearAssignedUser ? null : (assignedUser ?? this.assignedUser),
+      assignedUser:clearAssignedUser ? null : (assignedUser ?? this.assignedUser),
       createdAt: createdAt ?? this.createdAt,
+      userId: userId ?? this.userId,
     );
   }
 }

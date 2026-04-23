@@ -1,6 +1,7 @@
 import 'package:task_manager/features/task/domain/entities/task_entity.dart';
 
 abstract class TaskRepository {
+  Future<List<AppUser>> getUsers();
   Future<List<TaskEntity>> getTasks();
   Future<TaskEntity> getTaskById(String taskId);
   Future<TaskEntity> createTask(TaskEntity task);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager/features/task/domain/entities/task_entity.dart';
+import 'package:task_manager/features/task/presentation/widgets/dot_badge.dart';
 
 // ── colours ────────────────────────────────────────────────────────────────
 
@@ -83,16 +84,6 @@ String formatDateLong(DateTime? date) {
 
 // ── reusable badge widgets ──────────────────────────────────────────────────
 
-class StatusBadge extends StatelessWidget {
-  final TaskStatus status;
-  const StatusBadge({super.key, required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = statusColor(status);
-    return _DotBadge(color: color, label: statusLabel(status));
-  }
-}
 
 class PriorityBadge extends StatelessWidget {
   final TaskPriority priority;
@@ -101,77 +92,7 @@ class PriorityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = priorityColor(priority);
-    return _DotBadge(color: color, label: priorityLabel(priority));
+    return DotBadge(color: color, label: priorityLabel(priority));
   }
 }
 
-class _DotBadge extends StatelessWidget {
-  final Color color;
-  final String label;
-  const _DotBadge({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 5),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── assignee avatar ─────────────────────────────────────────────────────────
-
-class AssigneeAvatar extends StatelessWidget {
-  final String initials;
-  final double size;
-  final double fontSize;
-  const AssigneeAvatar({
-    super.key,
-    required this.initials,
-    this.size = 30,
-    this.fontSize = 11,
-  });
-
-  static const _colors = [
-    kPurple,
-    Color(0xFF00BCD4),
-    Color(0xFFFF7043),
-    Color(0xFF66BB6A),
-  ];
-
-  Color get _color => _colors[initials.codeUnitAt(0) % _colors.length];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: _color, shape: BoxShape.circle),
-      child: Center(
-        child: Text(
-          initials,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-}

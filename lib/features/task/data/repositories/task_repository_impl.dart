@@ -9,27 +9,46 @@ class TaskRepositoryImpl implements TaskRepository {
   TaskRepositoryImpl({required this.remoteDataSource});
 
   @override
+  Future<List<AppUser>> getUsers() => remoteDataSource.getUsers();
+
+  @override
   Future<List<TaskEntity>> getTasks() async {
-    final models = await remoteDataSource.getTasks();
-    return models.map((m) => m.toEntity()).toList();
+    final results = await Future.wait([
+      remoteDataSource.getTasks(),
+      remoteDataSource.getUsers(),
+    ]);
+    final models = results[0] as List<TaskModel>;
+    final users = results[1] as List<AppUser>;
+    return models.map((m) => m.toEntity(users: users)).toList();
   }
 
   @override
   Future<TaskEntity> getTaskById(String taskId) async {
-    final model = await remoteDataSource.getTaskById(taskId);
-    return model.toEntity();
+    final results = await Future.wait([
+      remoteDataSource.getTaskById(taskId),
+      remoteDataSource.getUsers(),
+    ]);
+    final model = results[0] as TaskModel;
+    final users = results[1] as List<AppUser>;
+    return model.toEntity(users: users);
   }
 
   @override
   Future<TaskEntity> createTask(TaskEntity task) async {
-    final model = await remoteDataSource.createTask(TaskModel.fromEntity(task));
-    return model.toEntity();
+    final results = await Future.wait([
+      remoteDataSource.createTask(TaskModel.fromEntity(task)),
+      remoteDataSource.getUsers(),
+    ]);
+    return (results[0] as TaskModel).toEntity(users: results[1] as List<AppUser>);
   }
 
   @override
   Future<TaskEntity> updateTask(TaskEntity task) async {
-    final model = await remoteDataSource.updateTask(TaskModel.fromEntity(task));
-    return model.toEntity();
+    final results = await Future.wait([
+      remoteDataSource.updateTask(TaskModel.fromEntity(task)),
+      remoteDataSource.getUsers(),
+    ]);
+    return (results[0] as TaskModel).toEntity(users: results[1] as List<AppUser>);
   }
 
   @override

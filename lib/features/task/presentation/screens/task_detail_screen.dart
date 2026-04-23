@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/features/task/domain/entities/task_entity.dart';
-import 'package:task_manager/features/task/presentation/bloc/task_bloc.dart';
-import 'package:task_manager/features/task/presentation/bloc/task_event.dart';
+import 'package:task_manager/features/task/presentation/cubit/task_cubit.dart';
 import 'package:task_manager/features/task/presentation/screens/create_edit_task_screen.dart';
+import 'package:task_manager/features/task/presentation/widgets/assignee_avatar.dart';
 import 'package:task_manager/features/task/presentation/widgets/delete_confirmation_dialog.dart';
+import 'package:task_manager/features/task/presentation/widgets/status_badge.dart';
 import 'package:task_manager/features/task/presentation/widgets/task_badges.dart';
 
-import 'package:task_manager/features/task/presentation/bloc/task_details_bloc.dart';
 import 'package:task_manager/di/injection_container.dart' as di;
 
 class TaskDetailScreen extends StatelessWidget {
@@ -18,7 +18,7 @@ class TaskDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => di.sl<TaskDetailsBloc>()..add(LoadTaskDetails(taskId)),
+      create: (_) => di.sl<TaskCubit>()..loadTaskById(taskId),
       child: Scaffold(
         backgroundColor: kBgDark,
         appBar: AppBar(
@@ -41,12 +41,14 @@ class TaskDetailScreen extends StatelessWidget {
             child: Container(height: 1, color: Colors.white12),
           ),
         ),
-        body: BlocBuilder<TaskDetailsBloc, TaskDetailsState>(
+        body: BlocBuilder<TaskCubit, TaskState>(
           builder: (context, state) {
-            if (state is TaskDetailsLoading) {
-              return const Center(child: CircularProgressIndicator(color: kPurple));
+            if (state is TaskLoadingState) {
+              return const Center(
+                child: CircularProgressIndicator(color: kPurple),
+              );
             }
-            if (state is TaskDetailsError) {
+            if (state is TaskErrorState) {
               return Center(
                 child: Text(
                   state.message,
@@ -54,8 +56,8 @@ class TaskDetailScreen extends StatelessWidget {
                 ),
               );
             }
-            if (state is TaskDetailsLoaded) {
-              final task = state.task;
+            if (state is TaskLoadedState) {
+              final task = state.tasks.firstWhere((t) => t.id == taskId);
               return SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                 child: Column(
@@ -76,14 +78,20 @@ class TaskDetailScreen extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () => _openEdit(context, task),
-                          child: const Text('Edit', style: TextStyle(color: kPurple, fontSize: 15)),
+                          child: const Text(
+                            'Edit',
+                            style: TextStyle(color: kPurple, fontSize: 15),
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'Created ${formatDateLong(task.createdAt)}',
-                      style: const TextStyle(color: Colors.white38, fontSize: 13),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -93,7 +101,8 @@ class TaskDetailScreen extends StatelessWidget {
                         _Chip(child: PriorityBadge(priority: task.priority)),
                       ],
                     ),
-                    if (task.description != null && task.description!.isNotEmpty) ...[
+                    if (task.description != null &&
+                        task.description!.isNotEmpty) ...[
                       const SizedBox(height: 20),
                       Container(
                         width: double.infinity,
@@ -107,7 +116,10 @@ class TaskDetailScreen extends StatelessWidget {
                           children: [
                             const Text(
                               'Description',
-                              style: TextStyle(color: Colors.white38, fontSize: 12),
+                              style: TextStyle(
+                                color: Colors.white38,
+                                fontSize: 12,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -146,7 +158,10 @@ class TaskDetailScreen extends StatelessWidget {
                             )
                           : const Text(
                               'No due date',
-                              style: TextStyle(color: Colors.white38, fontSize: 14),
+                              style: TextStyle(
+                                color: Colors.white38,
+                                fontSize: 14,
+                              ),
                             ),
                     ),
                     const SizedBox(height: 10),
@@ -173,7 +188,10 @@ class TaskDetailScreen extends StatelessWidget {
                             )
                           : const Text(
                               'Unassigned',
-                              style: TextStyle(color: Colors.white38, fontSize: 14),
+                              style: TextStyle(
+                                color: Colors.white38,
+                                fontSize: 14,
+                              ),
                             ),
                     ),
                     const SizedBox(height: 36),
@@ -197,18 +215,20 @@ class TaskDetailScreen extends StatelessWidget {
   }
 
   void _openEdit(BuildContext parentContext, TaskEntity task) {
-    Navigator.of(parentContext).push(
-      MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: parentContext.read<TaskBloc>(),
-          child: CreateEditTaskScreen(taskToEdit: task),
-        ),
-      ),
-    ).then((_) {
-      if (!parentContext.mounted) return;
-      // Reload on return
-      parentContext.read<TaskDetailsBloc>().add(LoadTaskDetails(taskId));
-    });
+    Navigator.of(parentContext)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => BlocProvider.value(
+              value: parentContext.read<TaskCubit>(),
+              child: CreateEditTaskScreen(taskToEdit: task),
+            ),
+          ),
+        )
+        .then((_) {
+          if (!parentContext.mounted) return;
+          // Reload on return
+          parentContext.read<TaskCubit>().loadTaskById(taskId);
+        });
   }
 
   void _confirmDelete(BuildContext parentContext, TaskEntity task) {
@@ -217,7 +237,7 @@ class TaskDetailScreen extends StatelessWidget {
       builder: (_) => DeleteConfirmationDialog(
         taskTitle: task.title,
         onConfirm: () {
-          parentContext.read<TaskBloc>().add(DeleteTaskEvent(task.id));
+          parentContext.read<TaskCubit>().deleteTask(task.id);
           Navigator.of(parentContext).pop();
         },
       ),
@@ -260,9 +280,10 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style:
-                  const TextStyle(color: Colors.white54, fontSize: 13)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
+          ),
           trailing,
         ],
       ),
@@ -285,8 +306,9 @@ class _PrimaryButton extends StatelessWidget {
           backgroundColor: kPurple,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
         ),
         child: Text(
           label,
@@ -312,8 +334,9 @@ class _DeleteButton extends StatelessWidget {
           side: const BorderSide(color: Color(0xFF3D1A1A)),
           backgroundColor: const Color(0xFF1E1010),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
         ),
         child: const Text(
           'Delete task',
