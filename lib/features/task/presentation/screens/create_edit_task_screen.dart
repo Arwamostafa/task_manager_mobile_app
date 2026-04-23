@@ -149,8 +149,7 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: widget.isEditing
-            ? [
+        actions: widget.isEditing ? [
                 TextButton(
                   onPressed: _save,
                   child: const Text(

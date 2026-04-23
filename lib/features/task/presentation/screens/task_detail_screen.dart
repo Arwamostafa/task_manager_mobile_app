@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_manager/features/task/presentation/widgets/chip.dart';
+import 'package:task_manager/features/task/presentation/widgets/primary_button.dart';
 import 'package:task_manager/features/task/domain/entities/task_entity.dart';
 import 'package:task_manager/features/task/presentation/cubit/task_cubit.dart';
 import 'package:task_manager/features/task/presentation/screens/create_edit_task_screen.dart';
 import 'package:task_manager/features/task/presentation/widgets/assignee_avatar.dart';
+import 'package:task_manager/features/task/presentation/widgets/delete_button.dart';
 import 'package:task_manager/features/task/presentation/widgets/delete_confirmation_dialog.dart';
+import 'package:task_manager/features/task/presentation/widgets/info_row.dart';
 import 'package:task_manager/features/task/presentation/widgets/status_badge.dart';
 import 'package:task_manager/features/task/presentation/widgets/task_badges.dart';
 
@@ -96,9 +100,9 @@ class TaskDetailScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        _Chip(child: StatusBadge(status: task.status)),
+                        BadgeChip(child:StatusBadge(status: task.status)),
                         const SizedBox(width: 10),
-                        _Chip(child: PriorityBadge(priority: task.priority)),
+                        BadgeChip(child:PriorityBadge(priority: task.priority)),
                       ],
                     ),
                     if (task.description != null &&
@@ -135,7 +139,7 @@ class TaskDetailScreen extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 14),
-                    _InfoRow(
+                    InfoRow(
                       label: 'Due date',
                       trailing: task.dueDate != null
                           ? Row(
@@ -165,7 +169,7 @@ class TaskDetailScreen extends StatelessWidget {
                             ),
                     ),
                     const SizedBox(height: 10),
-                    _InfoRow(
+                    InfoRow(
                       label: 'Assigned to',
                       trailing: task.assignedUser != null
                           ? Row(
@@ -195,12 +199,12 @@ class TaskDetailScreen extends StatelessWidget {
                             ),
                     ),
                     const SizedBox(height: 36),
-                    _PrimaryButton(
+                    PrimaryButton(
                       label: 'Edit task',
                       onPressed: () => _openEdit(context, task),
                     ),
                     const SizedBox(height: 12),
-                    _DeleteButton(
+                    DeleteButton(
                       onPressed: () => _confirmDelete(context, task),
                     ),
                   ],
@@ -245,104 +249,4 @@ class TaskDetailScreen extends StatelessWidget {
   }
 }
 
-// ── local helper widgets ────────────────────────────────────────────────────
 
-class _Chip extends StatelessWidget {
-  final Widget child;
-  const _Chip({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final Widget trailing;
-  const _InfoRow({required this.label, required this.trailing});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
-          ),
-          trailing,
-        ],
-      ),
-    );
-  }
-}
-
-class _PrimaryButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-  const _PrimaryButton({required this.label, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: kPurple,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-        ),
-      ),
-    );
-  }
-}
-
-class _DeleteButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  const _DeleteButton({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFFF5252),
-          side: const BorderSide(color: Color(0xFF3D1A1A)),
-          backgroundColor: const Color(0xFF1E1010),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-        ),
-        child: const Text(
-          'Delete task',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-        ),
-      ),
-    );
-  }
-}
